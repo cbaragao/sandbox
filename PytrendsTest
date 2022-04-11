@@ -1,0 +1,7 @@
+import pytrends
+from pytrends.request import TrendReq
+
+pytrends = TrendReq(hl="en-US", tz=360,requests_args={'verify':False})
+pytrends.build_payload(kw_list=["mst", "veterans"])
+df = pytrends.interest_over_time()
+df.plot(figsize=(20,7), linewidth=7)
