@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
 /* 
 Author: Chris Aragao
-Title: RemoveNumbersFromString
+Title: RemoveNLTKFromString
 Purpose: Remove Natural Language Toolkit (NLTK) words plus additional stop words from a list of words.
 */
 
