@@ -32,13 +32,13 @@ NoNulls = List.RemoveNulls(SplitList),
 WordCount = GetWordCount(NoExtraSpaces),
 
 // See if the list for each row contains duplicate keywords
-MatchDup = if List.ContainsAny(NoNulls, {"duplicate", "duplicated"}) then {"Duplicate"} else {""},
+MatchDup = if List.ContainsAny(NoNulls, {"duplicate", "duplicated", "Duplicate", "Duplicated"}) then {"Duplicate"} else {""},
 
 // See if the list for each row contains ROI keywords
-MatchROI = if List.Contains(NoNulls, {"roi"}) then List.Combine({MatchDup, {"Release of Information"}}) else MatchDup,
+MatchROI = if List.ContainsAny(NoNulls, {"roi", "ROI"}) then List.Combine({MatchDup, {"Release of Information"}}) else MatchDup,
 
 // See if the list for each row contains RFI keywords
-MatchRFI = if List.Contains(NoNulls, {"rfi"}) then List.Combine({MatchROI, {"Request for Information"}}) else MatchROI,
+MatchRFI = if List.ContainsAny(NoNulls, {"rfi", "RFI"}) then List.Combine({MatchROI, {"Request for Information"}}) else MatchROI,
 
 // Combine the list back up
 CombineText = Text.Combine(MatchRFI, "; "),
