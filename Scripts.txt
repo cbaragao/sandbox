@@ -6,3 +6,60 @@
 // DAX Formula for Calculating Business Days: 
 
 BusinessDaysSinceMod = CALCULATE(COUNTROWS(DimDate), DATESBETWEEN('DimDate'[Date], Max({START-DATE}), TODAY()-1), DimDate[IsBusinessDay]=1, ALL({SOURCE-DATASET}))
+
+
+// Regex
+
+ 
+  // last four
+  (\d{4})
+
+  // last four; date of birth
+  (\d{4}; \d{1,2}\/\d{2}\/\d{2,4})
+  
+  // dob: date
+  (dob: ?\d{1,2}\/\d{2}\/\d{2,4})
+  
+  // ssn with dashes, without spaces, with spaces
+  (\d{3}-?\d{2}-?\d{4}|\d{3} \d{2} \d{4})
+  
+  // us phone number
+  (?:\d{1}\s)?\(?(\d{3})\)?-?\s?(\d{3})-?\s?(\d{4})
+  
+  // PowerApps
+  
+    // Custom Form Validation
+    
+    //If the form is not valid, disable the button 
+    //Example of disabling a button on the DisplayMode property of the button
+    If(
+        !IsBlank(),   //This would be the field(s) you were checking, use other checks as necessary
+        DisplayMode.Edit, //If valid, enable the submit button
+        DisplayMode.Disabled //If invalid, disable the submit button
+    )
+    
+    //Here is example code I wrote using ERRORS
+    //Place after PATCH
+    If(
+        IsEmpty(Errors(DEV_OAE_Course_Catalog, varRecord)), //This checks if there was an error
+        //There was no error
+        Notify("The proposed addition was sent to 52M for review.", NotificationType.Success), 
+        //There was an error
+        Notify(First(Errors(DEV_OAE_Course_Catalog)).Message) //This gets error message
+    )
+
+// Power Automate
+
+  // Trigger Conditions
+  
+  //Check if a column equals something
+  @equals(triggerbody()?['Update'],'Y')
+
+  //Check if not empty
+  @not(empty(triggerBody()?['DirectorEmail']))
+
+  //Disable flow
+  @equals(1, 0)
+  
+  // Preventing endless loops on modify
+  https://o365scott.blog/2019/12/18/stopping-infinite-loops-when-updating-sharepoint-list-items/
