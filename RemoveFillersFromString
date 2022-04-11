@@ -1,0 +1,61 @@
+//-----------------------------------------------------------------------
+
+/* 
+Author: Chris Aragao
+Title: RemoveFillersFromString
+Purpose: Remove all prepositions, conjunctions, pronouns from string
+*/
+
+(STRING as text)=>
+let Source = if STRING = null then "" else Text.From(STRING),
+SplitText = Text.Split(Source, " "),
+RemovePreps =  List.RemoveMatchingItems(SplitText,
+    {
+        "aboard","about","above","across","after","against",
+    "along","amid","among","anti","around","as","at","before",
+    "behind","below","beneath","beside","besides","between",
+    "beyond","but","by","concerning","considering","despite",
+    "down","during","except","excepting","excluding","following",
+    "for","from","in","inside","into","like","minus","near","of",
+    "off","on","onto","opposite","outside","over","past","per",
+    "plus","regarding","round","save","since","than","through","to",
+    "toward","towards","under","underneath","unlike","until","up",
+    "upon","versus","via","with","within","without"
+    }
+),
+RemoveConj = List.RemoveMatchingItems(RemovePreps, 
+    {
+    "for","and","nor","but","or","yet","so","both",
+    "whether","only","either","neither","just","the",
+    "as","if","then","rather","than","no","sooner",
+    "such","that","after","although","much","soon",
+    "far","though","inasmuch","lest","though","now",
+    "since","even","just","where","wherever","whereas",
+    "because","whose","whoever","unless","while","before",
+    "why","until","how","till","supposing"
+    }
+),
+RemovePros = List.RemoveMatchingItems(RemoveConj, 
+    {
+        "i","we","you","he","she","they","me","us",
+        "her","him","them","ours","your","yours",
+        "hers","his","theirs","my","our","their",
+        "myself","yourself","herself","himself",
+        "itself","ourselves","yourselves","themselves",
+        "all","another","any","anybody","anyone",
+        "anything","both","each","either","everybody",
+        "everyone","everything","few","many","most",
+        "neither","nobody","none","no","one","nothing",
+        "other","others","several","some","somebody",
+        "someone","something","such","that","these",
+        "this","those","what","whatever","which","whichever",
+        "who","whoever","whom"
+    }
+),
+
+CombinedText = Text.Combine(RemovePros, " ")
+
+in 
+    CombinedText
+
+//-----------------------------------------------------------------------
