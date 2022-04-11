@@ -1,0 +1,8 @@
+// Embed in SP Page: 
+<iframe width="1280" height="800" src="{URL}?rs:embed=true" frameborder="0" allowFullScreen="true"></iframe>
+
+
+
+// DAX Formula for Calculating Business Days: 
+
+BusinessDaysSinceMod = CALCULATE(COUNTROWS(DimDate), DATESBETWEEN('DimDate'[Date], Max({START-DATE}), TODAY()-1), DimDate[IsBusinessDay]=1, ALL({SOURCE-DATASET}))
