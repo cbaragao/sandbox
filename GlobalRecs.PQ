@@ -54,9 +54,13 @@ let
     #"Renamed Columns4" = Table.RenameColumns(#"Removed Columns1",{{"Recommendations.Column10", "Open?"}}),
     #"Added Custom" = Table.AddColumn(#"Renamed Columns4", "Source", each "Oversight.gov"),
     #"Renamed Columns5" = Table.RenameColumns(#"Added Custom",{{"Agency", "Reporting Agency"}}),
-    #"Removed Columns2" = Table.RemoveColumns(#"Renamed Columns5",{"AgencyRecID", "Date_Agency", "OversightType", "Open?"})
+    #"Removed Columns2" = Table.RemoveColumns(#"Renamed Columns5",{"AgencyRecID", "Date_Agency", "OversightType", "Open?"}),
+    #"Filled Up" = Table.FillUp(#"Removed Columns2",{"Index", "Date", "Reporting Agency", "ReportTitle"}),
+    #"Duplicated Column" = Table.DuplicateColumn(#"Filled Up", "Reporting Agency", "Reporting Agency - Copy"),
+    #"Renamed Columns6" = Table.RenameColumns(#"Duplicated Column",{{"Reporting Agency - Copy", "Agency"}}),
+    #"Added Custom1" = Table.AddColumn(#"Renamed Columns6", "Status", each "Open")
 in
-    #"Removed Columns2"
+    #"Added Custom1"
 
 ----------------------------------------------------------------------------------------------
 
@@ -104,18 +108,15 @@ let
     #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"Page", type text}}),
     #"Invoked Custom Function" = Table.AddColumn(#"Changed Type", "Recommendations", each fxGAORecommendations([Page])),
     #"Expanded Recommendations" = Table.ExpandTableColumn(#"Invoked Custom Function", "Recommendations", {"Agency", "Recommendation", "Status", "Column4", "Column5", "Column6", "Column7", "Column8", "Column9", "Column10", "Column11", "Column12"}, {"Recommendations.Agency", "Recommendations.Recommendation", "Recommendations.Status", "Recommendations.Column4", "Recommendations.Column5", "Recommendations.Column6", "Recommendations.Column7", "Recommendations.Column8", "Recommendations.Column9", "Recommendations.Column10", "Recommendations.Column11", "Recommendations.Column12"}),
-    #"Removed Columns" = Table.RemoveColumns(#"Expanded Recommendations",{"Recommendations.Column11", "Recommendations.Column12", "Recommendations.Column10"}),
-    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns",{{"Recommendations.Column9", "Contact"}, {"Recommendations.Column8", "Date"}, {"Recommendations.Column7", "ReportNumber"}, {"Recommendations.Column6", "ReportTitle"}}),
-    #"Filtered Rows" = Table.SelectRows(#"Renamed Columns1", each ([Recommendations.Status] = "Open#(lf)  #(lf)#(lf)#(lf)When we confirm what actions the agency has taken in response to this recommendation, we will provide updated information.")),
-    #"Removed Columns1" = Table.RemoveColumns(#"Filtered Rows",{"Recommendations.Status", "Recommendations.Column5"}),
-    #"Renamed Columns2" = Table.RenameColumns(#"Removed Columns1",{{"Recommendations.Column4", "Status"}, {"Recommendations.Recommendation", "Recommendation"}, {"Recommendations.Agency", "Agency"}}),
-    #"Added Index" = Table.AddIndexColumn(#"Renamed Columns2", "Index", 1, 1, Int64.Type),
+    #"Renamed Columns1" = Table.RenameColumns(#"Expanded Recommendations",{{"Recommendations.Column9", "Contact"}, {"Recommendations.Column8", "Date"}, {"Recommendations.Column7", "ReportNumber"}, {"Recommendations.Column6", "ReportTitle"}, {"Recommendations.Column4", "Status"}, {"Recommendations.Recommendation", "Recommendation"}, {"Recommendations.Agency", "Agency"}}),
+    #"Filtered Rows" = Table.SelectRows(#"Renamed Columns1", each ([Status] = "Open")),
+    #"Added Index" = Table.AddIndexColumn(#"Filtered Rows", "Index", 1, 1, Int64.Type),
     #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "Page", "Agency", "Recommendation", "Status", "ReportTitle", "ReportNumber", "Date", "Contact"}),
     #"Added Custom" = Table.AddColumn(#"Reordered Columns", "Reporting Agency", each "GAO"),
     #"Added Custom1" = Table.AddColumn(#"Added Custom", "Source", each "GAO.gov"),
-    #"Removed Columns2" = Table.RemoveColumns(#"Added Custom1",{"Contact", "Status"})
+    #"Removed Other Columns" = Table.SelectColumns(#"Added Custom1",{"Index", "Page", "Agency", "Recommendation", "Status", "Reporting Agency", "Source"})
 in
-    #"Removed Columns2"
+    #"Removed Other Columns"
 
 ----------------------------------------------------------------------------------------------------------------
 
@@ -123,7 +124,8 @@ in
 
 let
     Source = Table.Combine({OversightRecommendations, GAORecommendations}),
-    #"Cleaned Text" = Table.TransformColumns(Source,{{"Recommendation", Text.Clean, type text}})
+    #"Cleaned Text" = Table.TransformColumns(Source,{{"Recommendation", Text.Clean, type text}}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Cleaned Text",{{"Date", type date}})
 in
-    #"Cleaned Text"
+    #"Changed Type"
 
