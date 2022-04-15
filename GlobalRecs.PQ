@@ -62,62 +62,24 @@ let
 in
     #"Added Custom1"
 
-----------------------------------------------------------------------------------------------
-
-// fnGAORecommendations
-
-(PgStart as text)=>
-
-
-let
-    Source = Web.BrowserContents("https://www.gao.gov/reports-testimonies/recommendations-database?processed=1&topic=all&page" & PgStart),
-    #"Extracted Table From Html" = Html.Table(Source, {{"Column1", ".views-field-field-agency"}, {"Column2", ".views-field-field-recommendation"}, {"Column3", ".views-field-field-status-code"}, {"Column4", ".code"}, {"Column5", ".comment *"}, {"Column6", "H3 *"}, {"Column7", ".field\-\-name-field-product-number"}, {"Column8", ".datetime"}, {"Column9", ".field\-\-name-field-staff-contact"}, {"Column10", ".recommendations-counter"}, {"Column11", ".badge"}, {"Column12", ".js-toggle"}}, [RowSelector=".views-field-field-agency"]),
-    #"Promoted Headers" = Table.PromoteHeaders(#"Extracted Table From Html", [PromoteAllScalars=true]),
-    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Agency", type text}, {"Recommendation", type text}, {"Status", type text}, {"Column4", type text}, {"Column5", type text}, {"Column6", type text}, {"Column7", type text}, {"Column8", type date}, {"Column9", type text}, {"Column10", type text}, {"Column11", Int64.Type}, {"Column12", type text}})
-in
-    #"Changed Type"
-
-------------------------------------------------------------------------------------------------
-
-// GAOResults
-
-let
-    Source = Web.BrowserContents("https://www.gao.gov/reports-testimonies/recommendations-database?processed=1&topic=all&page=1"),
-    #"Extracted Table From Html" = Html.Table(Source, {{"GAOResults", ".result-count"}}),
-    #"Changed Type" = Table.TransformColumnTypes(#"Extracted Table From Html",{{"GAOResults", type text}}),
-    #"Split Column by Delimiter" = Table.SplitColumn(#"Changed Type", "GAOResults", Splitter.SplitTextByEachDelimiter({" of "}, QuoteStyle.Csv, false), {"GAOResults.1", "GAOResults.2"}),
-    #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"GAOResults.1", type text}, {"GAOResults.2", type text}}),
-    #"Removed Columns" = Table.RemoveColumns(#"Changed Type1",{"GAOResults.1"}),
-    #"Split Column by Delimiter1" = Table.SplitColumn(#"Removed Columns", "GAOResults.2", Splitter.SplitTextByEachDelimiter({" "}, QuoteStyle.Csv, false), {"GAOResults.2.1", "GAOResults.2.2"}),
-    #"Changed Type2" = Table.TransformColumnTypes(#"Split Column by Delimiter1",{{"GAOResults.2.1", Int64.Type}, {"GAOResults.2.2", type text}}),
-    #"Removed Columns1" = Table.RemoveColumns(#"Changed Type2",{"GAOResults.2.2"}),
-    #"Added Custom" = Table.AddColumn(#"Removed Columns1", "Pages", each [GAOResults.2.1]/20),
-    #"Removed Columns2" = Table.RemoveColumns(#"Added Custom",{"GAOResults.2.1"}),
-    #"Rounded Up" = Table.TransformColumns(#"Removed Columns2",{{"Pages", Number.RoundUp, Int64.Type}})
-in
-    #"Rounded Up"
 
 ----------------------------------------------------------------------------------------------------
 
 // GAORecommendations
 
 let
-    Source = {0..(Table.FirstValue(GAOResults)-1)},
-    #"Converted to Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-    #"Renamed Columns" = Table.RenameColumns(#"Converted to Table",{{"Column1", "Page"}}),
-    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"Page", type text}}),
-    #"Invoked Custom Function" = Table.AddColumn(#"Changed Type", "Recommendations", each fxGAORecommendations([Page])),
-    #"Expanded Recommendations" = Table.ExpandTableColumn(#"Invoked Custom Function", "Recommendations", {"Agency", "Recommendation", "Status", "Column4", "Column5", "Column6", "Column7", "Column8", "Column9", "Column10", "Column11", "Column12"}, {"Recommendations.Agency", "Recommendations.Recommendation", "Recommendations.Status", "Recommendations.Column4", "Recommendations.Column5", "Recommendations.Column6", "Recommendations.Column7", "Recommendations.Column8", "Recommendations.Column9", "Recommendations.Column10", "Recommendations.Column11", "Recommendations.Column12"}),
-    #"Renamed Columns1" = Table.RenameColumns(#"Expanded Recommendations",{{"Recommendations.Column9", "Contact"}, {"Recommendations.Column8", "Date"}, {"Recommendations.Column7", "ReportNumber"}, {"Recommendations.Column6", "ReportTitle"}, {"Recommendations.Column4", "Status"}, {"Recommendations.Recommendation", "Recommendation"}, {"Recommendations.Agency", "Agency"}}),
-    #"Filtered Rows" = Table.SelectRows(#"Renamed Columns1", each ([Status] = "Open")),
-    #"Added Index" = Table.AddIndexColumn(#"Filtered Rows", "Index", 1, 1, Int64.Type),
-    #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "Page", "Agency", "Recommendation", "Status", "ReportTitle", "ReportNumber", "Date", "Contact"}),
-    #"Added Custom" = Table.AddColumn(#"Reordered Columns", "Reporting Agency", each "GAO"),
-    #"Added Custom1" = Table.AddColumn(#"Added Custom", "Source", each "GAO.gov"),
-    #"Removed Other Columns" = Table.SelectColumns(#"Added Custom1",{"Index", "Page", "Agency", "Recommendation", "Status", "Reporting Agency", "Source"})
+    Source = Csv.Document(Web.Contents("https://www.gao.gov/open-recs-csv?processed=1&topic=all&page=&rows=4648"),[Delimiter=",", Columns=10, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type text}, {"Column6", type text}, {"Column7", type text}, {"Column8", type text}, {"Column9", type text}, {"Column10", type text}}),
+    #"Removed Top Rows" = Table.Skip(#"Changed Type",5),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Top Rows", [PromoteAllScalars=true]),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"Publication Name", type text}, {"Publication  Number", type text}, {"Date Publication Issued", type date}, {"Director Name", type text}, {"Director Phone", type text}, {"Agency", type text}, {"Recommendation", type text}, {"Status", type text}, {"Priority", type text}, {"Comments", type text}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Changed Type1",{{"Publication Name", "ReportTitle"}, {"Publication  Number", "ReportNumber"}, {"Date Publication Issued", "Date"}}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Renamed Columns",{"ReportTitle", "ReportNumber", "Date", "Agency", "Recommendation", "Status"}),
+    #"Added Index" = Table.AddIndexColumn(#"Removed Other Columns", "Index", 1, 1, Int64.Type),
+    #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "ReportTitle", "ReportNumber", "Date", "Agency", "Recommendation", "Status"}),
+    #"Added Custom" = Table.AddColumn(#"Reordered Columns", "Source", each "GAO")
 in
-    #"Removed Other Columns"
-
+    #"Added Custom"
 ----------------------------------------------------------------------------------------------------------------
 
 // GlobalRecommendations
