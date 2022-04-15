@@ -68,14 +68,15 @@ in
 // GAORecommendations
 
 let
-    Source = Csv.Document(Web.Contents("https://www.gao.gov/open-recs-csv?processed=1&topic=all&page=&rows=4648"),[Delimiter=",", Columns=10, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+    Source = Csv.Document(Web.Contents("https://www.gao.gov/open-recs-csv?processed=1&topic=all&page&rows=10000"),[Delimiter=",", Columns=10, Encoding=65001, QuoteStyle=QuoteStyle.None]),
     #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type text}, {"Column6", type text}, {"Column7", type text}, {"Column8", type text}, {"Column9", type text}, {"Column10", type text}}),
     #"Removed Top Rows" = Table.Skip(#"Changed Type",5),
     #"Promoted Headers" = Table.PromoteHeaders(#"Removed Top Rows", [PromoteAllScalars=true]),
     #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"Publication Name", type text}, {"Publication  Number", type text}, {"Date Publication Issued", type date}, {"Director Name", type text}, {"Director Phone", type text}, {"Agency", type text}, {"Recommendation", type text}, {"Status", type text}, {"Priority", type text}, {"Comments", type text}}),
     #"Renamed Columns" = Table.RenameColumns(#"Changed Type1",{{"Publication Name", "ReportTitle"}, {"Publication  Number", "ReportNumber"}, {"Date Publication Issued", "Date"}}),
     #"Removed Other Columns" = Table.SelectColumns(#"Renamed Columns",{"ReportTitle", "ReportNumber", "Date", "Agency", "Recommendation", "Status"}),
-    #"Added Index" = Table.AddIndexColumn(#"Removed Other Columns", "Index", 1, 1, Int64.Type),
+    #"Filtered Rows" = Table.SelectRows(#"Removed Other Columns", each ([ReportNumber] <> "")),
+    #"Added Index" = Table.AddIndexColumn(#"Filtered Rows", "Index", 1, 1, Int64.Type),
     #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "ReportTitle", "ReportNumber", "Date", "Agency", "Recommendation", "Status"}),
     #"Added Custom" = Table.AddColumn(#"Reordered Columns", "Source", each "GAO")
 in
