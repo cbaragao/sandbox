@@ -1,0 +1,75 @@
+openapi: 3.0.0
+info:
+  title: Alpha Vantage Stock API
+  version: 1.0.0
+  description: Get daily stock time series data using Alpha Vantage.
+servers:
+  - url: https://www.alphavantage.co
+paths:
+  /query:
+    get:
+      summary: Get daily stock prices
+      operationId: getDailyTimeSeries
+      parameters:
+        - name: function
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [TIME_SERIES_DAILY]
+          example: TIME_SERIES_DAILY
+          description: Use TIME_SERIES_DAILY to get daily prices
+        - name: symbol
+          in: query
+          required: true
+          schema:
+            type: string
+          example: IBM
+          description: Stock ticker symbol
+        - name: apikey
+          in: query
+          required: true
+          schema:
+            type: string
+          example: 8U5O0O370SLDJ8Z0
+          description: Your Alpha Vantage API key
+        - name: outputsize
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [compact, full]
+          description: compact = last 100 points, full = full-length history
+        - name: datatype
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [json, csv]
+          description: Format of the response
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  "Meta Data":
+                    type: object
+                    description: Metadata for the request
+                  "Time Series (Daily)":
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        "1. open":
+                          type: string
+                        "2. high":
+                          type: string
+                        "3. low":
+                          type: string
+                        "4. close":
+                          type: string
+                        "5. volume":
+                          type: string
