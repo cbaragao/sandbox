@@ -31,7 +31,7 @@ paths:
           required: true
           schema:
             type: string
-          example: 8U5O0O370SLDJ8Z0
+          default: 8U5O0O370SLDJ8Z0
           description: Your Alpha Vantage API key
         - name: outputsize
           in: query
